@@ -1,6 +1,7 @@
-# mruby-json
+# mruby-iijson
 
-"mruby-json" is JSON module for mruby.
+"mruby-iijson" is JSON module for mruby.
+
 
 ## Implemented Methods:
  - dump, generate, load, parse
