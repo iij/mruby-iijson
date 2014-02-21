@@ -47,8 +47,8 @@ assert('JSON.generate: number (Fixnum)') do
 end
 
 assert('JSON.generate: number (Float)') do
-  str = JSON.generate [123.456]
-  assert_equal "[123.456]", str
+  str = JSON.generate [134.625]
+  assert_equal "[134.625]", str
 end
 
 assert('JSON.generate: string') do

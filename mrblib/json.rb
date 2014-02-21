@@ -58,7 +58,7 @@ module JSON
       if obj.infinite? or obj.nan?
         raise GeneratorError, "#{obj.to_s} not allowed in JSON"
       end
-      obj.to_s
+      format "%.17g", obj
 
     else
       a = []
