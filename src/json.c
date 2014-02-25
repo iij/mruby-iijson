@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <inttypes.h>
 #include <string.h>
 
 #include "mruby.h"
@@ -27,6 +28,7 @@ static int json_delimiter_p(char ch);
 static int json_getc(struct json_parser *);
 static void json_skip_ws(struct json_parser *);
 static void json_ungetc(struct json_parser *);
+static int json_unicode2utf8(uint32_t, char *);
 static int json_whitespace_p(char ch);
 
 static int json_parse_array(struct json_parser *, mrb_value *);
@@ -106,6 +108,28 @@ json_ungetc(struct json_parser *parser)
 {
   if (parser->cursor > 0)
     parser->cursor--;
+}
+
+static int
+json_unicode2utf8(uint32_t unicode, char *cp)
+{
+  int n = 0;
+  if (unicode < 0x80) {
+    cp[n++] = unicode;
+  } else if (unicode < 0x800) {
+    cp[n++] = 0xc0 + (unicode >> 6);
+    cp[n++] = 0x80 + (unicode & 0x3f);
+  } else if (unicode < 0x10000) {
+    cp[n++] = 0xe0 + (unicode >> 12);
+    cp[n++] = 0x80 + ((unicode >> 6) & 0x3f);
+    cp[n++] = 0x80 + (unicode & 0x3f);
+  } else {
+    cp[n++] = 0xf0 + (unicode >> 18);
+    cp[n++] = 0x80 + ((unicode >> 12) & 0x3f);
+    cp[n++] = 0x80 + ((unicode >> 6) & 0x3f);
+    cp[n++] = 0x80 + (unicode & 0x3f);
+  }
+  return n;
 }
 
 static int
@@ -363,12 +387,15 @@ json_parse_string(struct json_parser *parser, mrb_value *result)
 {
   mrb_state *mrb = parser->mrb;
   mrb_value str;
-  int ch, n;
+  uint32_t unicode;
+  uint16_t utf16;
+  int ch, i, n;
   char *cp;
 
   str = mrb_str_buf_new(mrb, 30);
   cp = RSTRING_PTR(str);
   n = 0;
+  unicode = 0;
 
   while (1) {
     ch = json_getc(parser);
@@ -404,13 +431,55 @@ json_parse_string(struct json_parser *parser, mrb_value *result)
           ch = 0x09;
           break;
         case 'u':
-          /* XXX: Unicode is not supported */
-          (void)json_getc(parser);
-          (void)json_getc(parser);
-          (void)json_getc(parser);
-          (void)json_getc(parser);
-          ch = '=';
-          break;
+          utf16 = 0;
+          for (i = 0; i < 4; i++) {
+            ch = json_getc(parser);
+            if (ch == JSON_EOF) {
+              mrb_raise(mrb, E_JSON_PARSER_ERROR, "invalid unicode escape");
+            }
+            if (ch >= '0' && ch <= '9') {
+              ch -= '0';
+            } else if (ch >= 'A' && ch <= 'F') {
+              ch = (ch - 'A') + 10;
+            } else if (ch >= 'a' && ch <= 'f') {
+              ch = (ch - 'a') + 10;
+            } else {
+              mrb_raise(mrb, E_JSON_PARSER_ERROR, "invalid unicode character");
+            }
+            utf16 *= 16;
+            utf16 += ch;
+          }
+
+          if (n + 8 >= RSTRING_CAPA(str)) {
+            mrb_str_resize(mrb, str, RSTRING_CAPA(str)*2);
+            cp = RSTRING_PTR(str);
+          }
+
+          if ((utf16 & 0xf800) == 0xd800) {
+            if ((utf16 & 0xfc00) == 0xd800) {
+              /* high surrogate */
+              unicode = utf16;
+              continue;
+            } else {
+              /* low surrogate */
+              if (unicode > 0) {
+                unicode = ((unicode & 0x03ff) + 0x040) << 10;
+                unicode += utf16 & 0x03ff;
+              } else {
+                /* error: low surrogate comes first... */
+              }
+            }
+          } else {
+            if (unicode > 0) {
+              /* error: high surrogate not followed by low surrogate */
+              n += json_unicode2utf8(unicode, &cp[n]);
+            }
+            unicode = utf16;
+          }
+
+          n += json_unicode2utf8(unicode, &cp[n]);
+          unicode = 0;
+          continue;
         default:
           mrb_raise(mrb, E_JSON_PARSER_ERROR, "invalid escape char");
           break;
