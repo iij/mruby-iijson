@@ -7,7 +7,7 @@
 #include "mruby/hash.h"
 #include "mruby/string.h"
 
-#define E_JSON_PARSER_ERROR (mrb_class_get_under(mrb, mrb_class_get(mrb, "JSON"), "ParserError"))
+#define E_JSON_PARSER_ERROR (mrb_class_get_under(mrb, mrb_module_get(mrb, "JSON"), "ParserError"))
 
 #define JSON_EOF -1
 

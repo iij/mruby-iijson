@@ -101,3 +101,9 @@ assert('JSON.parse: text from RFC4726') do
   # will be in a random order.
   assert_equal hash, JSON.parse(JSON.generate(hash))
 end
+
+assert('JSON::ParserError') do
+  assert_raise(JSON::ParserError) do
+    JSON.parse "[xxx]"
+  end
+end
