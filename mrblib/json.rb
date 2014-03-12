@@ -100,3 +100,11 @@ module JSON
   class ParserError < JSONError; end
   class NestingError < ParserError; end
 end
+
+unless Float.method_defined? :nan?
+  class Float
+    def nan?
+      not (self == self)
+    end
+  end
+end

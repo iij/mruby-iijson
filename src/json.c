@@ -37,6 +37,14 @@ static int json_parse_number2(struct json_parser *, int, mrb_value *, int, int);
 static int json_parse_string(struct json_parser *, mrb_value *);
 static int json_parse_value(struct json_parser *, mrb_value *);
 
+#if MRUBY_RELEASE_NO < 10000
+static struct RClass *
+mrb_module_get(mrb_state *mrb, const char *name)
+{
+  return mrb_class_get(mrb, name);
+}
+#endif
+
 static void
 json_check_nesting(struct json_parser *parser)
 {
