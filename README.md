@@ -36,11 +36,22 @@ h = {
   :Country   => "US"
 }
 p JSON.generate(h)
+puts JSON.generate(JSON.parse(p), {:pretty_print => true, :indent_with => 2})
 ```
 
 ```
 {"Image"=>{"Thumbnail"=>{"Url"=>"http://www.example.com/image/481989943", "Height"=>125, "Width"=>"100"}, "Title"=>"View from 15th Floor", "Height"=>600, "Width"=>800, "IDs"=>[116, 943, 234, 38793]}}
 "{\"Longitude\":-122.3959,\"Address\":\"\",\"City\":\"SAN FRANCISCO\",\"State\":\"CA\",\"precision\":\"zip\",\"Latitude\":37.7668,\"Zip\":\"94107\",\"Country\":\"US\"}"
+{
+  "precision": "zip",
+  "Latitude": 37.766800000000003,
+  "Longitude": -122.3959,
+  "Address": "",
+  "City": "SAN FRANCISCO",
+  "State": "CA",
+  "Zip": "94107",
+  "Country": "US"
+}
 ```
 
 
