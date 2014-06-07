@@ -3,9 +3,9 @@ module JSON
     state = {}
     state[:max_nesting] = limit if limit
     begin
-      js = JSON.generate(object, state)
+      js = JSON.generate(object, nil, state)
     rescue JSON::NestingError
-      raise ArgumentError, "exceed depth limit"
+      raise ArgumentError, "exceeded depth limit"
     end
     if io
       io.write js
@@ -15,17 +15,30 @@ module JSON
     end
   end
 
-  def self.generate(obj, state=nil)
+  def self.generate(obj, options=nil, state=nil)
+    options = (options || {}).to_hash unless options.is_a? Hash
+    options[:pretty_print] ||= false
+    options[:indent_with] ||= 2
     state = (state || {}).to_hash unless state.is_a? Hash
     state[:max_nesting] ||= 100
     state[:nesting] = 0
-    self.generate0(obj, state)
+    self.generate0(obj, options, state)
   end
 
-  def self.generate0(obj, state)
+  def self.generate0(obj, options, state)
     if state[:nesting] >= state[:max_nesting]
       raise JSON::NestingError, "nesting of #{state[:nesting]} is too deep"
     end
+
+    pretty = options[:pretty_print]
+    
+    if pretty
+      indent = options[:indent_with].class == Fixnum ? " " * options[:indent_with] : options[:indent_with]
+    else
+      indent = ""
+    end
+
+    nl = pretty ? "\n" : ""
 
     if obj == false
       return "false"
@@ -40,16 +53,22 @@ module JSON
       members = []
       state[:nesting] += 1
       obj.each { |k, v|
-        members << JSON.generate0(k, state) + ":" + JSON.generate0(v, state)
+        members << JSON.generate0(k, options, state) + ":" + (pretty ? " " : "") + JSON.generate0(v, options, state)
       }
+      if pretty
+        members.map! { |k| (indent * state[:nesting]) << "#{k}" }.join("_")
+      end
       state[:nesting] -= 1
-      return "{" + members.join(",") + "}"
+      return "{" << nl + members.join("," << nl) << nl << (indent * state[:nesting]) << "}"
 
     elsif obj.is_a? Array
       state[:nesting] += 1
-      members = obj.map { |v| JSON.generate(v, state) }
+      members = obj.map { |v| JSON.generate0(v, options, state) }
+      if pretty
+        members.map! { |k| (indent * state[:nesting]) << "#{k}" }.join("_")
+      end
       state[:nesting] -= 1
-      return "[" + members.join(",") + "]"
+      return "[" << nl << members.join("," << nl) << nl << (indent * state[:nesting]) << "]"
 
     elsif obj.is_a? Fixnum
       return obj.to_s
