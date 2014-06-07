@@ -590,7 +590,9 @@ mrb_json_parse(mrb_state *mrb, mrb_value mod)
   parser.nesting     = 0;
   parser.max_nesting = DEFAULT_MAX_NESTING;
 
-  json_parse_value(&parser, &obj);
+  if (json_parse_value(&parser, &obj) == 0) {
+    mrb_raise(mrb, E_JSON_PARSER_ERROR, "no JSON value");
+  }
 
   // if we have extra characters:
   // unexpected token at '3' (JSON::ParserError)

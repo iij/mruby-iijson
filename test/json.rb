@@ -107,3 +107,9 @@ assert('JSON::ParserError') do
     JSON.parse "[xxx]"
   end
 end
+
+assert('JSON.parse: empty string is not a valid JSON text') do
+  assert_raise(JSON::ParserError) do
+    JSON.parse ""
+  end
+end
