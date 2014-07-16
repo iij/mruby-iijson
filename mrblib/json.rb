@@ -56,19 +56,19 @@ module JSON
         members << JSON.generate0(k, options, state) + ":" + (pretty ? " " : "") + JSON.generate0(v, options, state)
       }
       if pretty
-        members.map! { |k| (indent * state[:nesting]) << "#{k}" }.join("_")
+        members.map! { |k| (indent * state[:nesting]) + "#{k}" }.join("_")
       end
       state[:nesting] -= 1
-      return "{" << nl + members.join("," << nl) << nl << (indent * state[:nesting]) << "}"
+      return "{" + nl + members.join("," + nl) + nl + (indent * state[:nesting]) + "}"
 
     elsif obj.is_a? Array
       state[:nesting] += 1
       members = obj.map { |v| JSON.generate0(v, options, state) }
       if pretty
-        members.map! { |k| (indent * state[:nesting]) << "#{k}" }.join("_")
+        members.map! { |k| (indent * state[:nesting]) + "#{k}" }.join("_")
       end
       state[:nesting] -= 1
-      return "[" << nl << members.join("," << nl) << nl << (indent * state[:nesting]) << "]"
+      return "[" + nl + members.join("," + nl) + nl + (indent * state[:nesting]) + "]"
 
     elsif obj.is_a? Fixnum
       return obj.to_s
@@ -77,7 +77,7 @@ module JSON
       if obj.infinite? or obj.nan?
         raise GeneratorError, "#{obj.to_s} not allowed in JSON"
       end
-      format "%.17g", obj
+      sprintf "%.17g", obj
 
     else
       a = []
