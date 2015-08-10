@@ -4,7 +4,10 @@
 
 
 ## Implemented Methods:
- - dump, generate, load, parse
+ - [JSON.dump](http://docs.ruby-lang.org/en/2.2.0/JSON.html#method-i-dump)
+ - [JSON.generate](http://docs.ruby-lang.org/en/2.2.0/JSON.html#method-i-generate)
+ - [JSON.load](http://docs.ruby-lang.org/en/2.2.0/JSON.html#method-i-load)
+ - [JSON.parse](http://docs.ruby-lang.org/en/2.2.0/JSON.html#method-i-parse)
 
 
 ## Example:
