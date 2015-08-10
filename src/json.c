@@ -492,7 +492,7 @@ json_parse_string(struct json_parser *parser, mrb_value *result)
           mrb_raise(mrb, E_JSON_PARSER_ERROR, "invalid escape char");
           break;
       }
-    } else if (ch < 0x20 || ch > 0x7e) {
+    } else if (ch < 0x20) {
       mrb_raise(mrb, E_JSON_PARSER_ERROR, "invalid char");
     }
 
