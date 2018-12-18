@@ -16,10 +16,10 @@ module JSON
   end
 
   def self.generate(obj, options=nil, state=nil)
-    options = (options || {}).to_hash unless options.is_a? Hash
+    options = (options || {}).to_h unless options.is_a? Hash
     options[:pretty_print] ||= false
     options[:indent_with] ||= 2
-    state = (state || {}).to_hash unless state.is_a? Hash
+    state = (state || {}).to_h unless state.is_a? Hash
     state[:max_nesting] ||= 100
     state[:nesting] = 0
     self.generate0(obj, options, state)
